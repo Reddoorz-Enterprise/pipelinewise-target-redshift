@@ -631,6 +631,29 @@ class DbSync:
         if filter_schemas is not None: sql = sql + " AND LOWER(c.table_schema) IN (" + ', '.join("'{}'".format(s).lower() for s in filter_schemas) + ")"
         return self.query(sql)
 
+    def handle_datatype_change(self, column_name, stream):
+        altered_col = column_name.replace("\"", "") + "_type_change"
+        version_column = "ALTER TABLE {} RENAME COLUMN {} TO {}".format(self.table_name(stream, is_stage=False),
+                                                                        column_name,
+                                                                        altered_col)
+        update_altered_col_with_prev_data = "UPDATE  {} SET  {}={}".format(self.table_name(stream, is_stage=False),
+                                                                           altered_col,
+                                                                           column_name)
+        rename_altered_to_original_col = "ALTER TABLE {} RENAME COLUMN {} TO {}".format(
+            self.table_name(stream, is_stage=False),
+            altered_col,
+            column_name)
+        self.logger.info("DataType change detected")
+        self.logger.info('Versioning column: {}'.format(version_column))
+        self.query(version_column)
+        self.logger.info("Updating {} with column : {}".format(altered_col, column_name))
+        self.query(update_altered_col_with_prev_data)
+        self.drop_column(column_name, stream)
+        self.logger.info("Renaming versioned_col to original col :{}".format(rename_altered_to_original_col))
+        self.query(rename_altered_to_original_col)
+
+
+
     def update_columns(self):
         stream_schema_message = self.stream_schema_message
         stream = stream_schema_message['stream']
@@ -681,8 +704,9 @@ class DbSync:
         ]
 
         for (column_name, column) in columns_to_replace:
-            self.version_column(column_name, stream)
-            self.add_column(column, stream)
+            # self.version_column(column_name, stream)
+            # self.add_column(column, stream)
+            self.handle_datatype_change(column_name,stream)
 
         # Refresh table cache if required
         if self.table_cache and (len(columns_to_add) > 0 or len(columns_to_replace)):
