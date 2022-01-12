@@ -633,8 +633,22 @@ class DbSync:
 
     def handle_datatype_change(self, column_name, stream):
         altered_col = column_name.replace("\"", "") + "_type_change"
+        columns_to_add = [
+            column_clause(
+                name,
+                properties_schema
+            )
+            for (name, properties_schema) in self.flatten_schema.items()
+            if name.lower() ==altered_col
+        ]
+        self.logger.warn(columns_to_add)
+
+        # column_type(properties_schema, with_length=False).lower()
+
         self.logger.info("ADDing COlumns")
-        self.add_column(altered_col, stream)
+        for column in columns_to_add:
+
+            self.add_column(column , stream)
         # version_column = "ALTER TABLE {} RENAME COLUMN {} TO {}".format(self.table_name(stream, is_stage=False),
         #                                                                 column_name,
         #                                                                 altered_col)
