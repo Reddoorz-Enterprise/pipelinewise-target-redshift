@@ -641,6 +641,7 @@ class DbSync:
             for (name, properties_schema) in self.flatten_schema.items()
             if name.lower() ==altered_col
         ]
+        self.logger.warn(self.flatten_schema.items())
         self.logger.warn(columns_to_add)
 
         # column_type(properties_schema, with_length=False).lower()
