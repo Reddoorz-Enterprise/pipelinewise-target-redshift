@@ -633,9 +633,10 @@ class DbSync:
 
     def handle_datatype_change(self, column_name, stream):
         altered_col = column_name.replace("\"", "") + "_type_change"
-        version_column = "ALTER TABLE {} RENAME COLUMN {} TO {}".format(self.table_name(stream, is_stage=False),
-                                                                        column_name,
-                                                                        altered_col)
+        # self.add_column(altered_col, stream)
+        # version_column = "ALTER TABLE {} RENAME COLUMN {} TO {}".format(self.table_name(stream, is_stage=False),
+        #                                                                 column_name,
+        #                                                                 altered_col)
         update_altered_col_with_prev_data = "UPDATE  {} SET  {}={}".format(self.table_name(stream, is_stage=False),
                                                                            altered_col,
                                                                            column_name)
@@ -644,8 +645,8 @@ class DbSync:
             altered_col,
             column_name)
         self.logger.info("DataType change detected")
-        self.logger.info('Versioning column: {}'.format(version_column))
-        self.query(version_column)
+        # self.logger.info('Versioning column: {}'.format(version_column))
+        # self.query(version_column)
         self.logger.info("Updating {} with column : {}".format(altered_col, column_name))
         self.query(update_altered_col_with_prev_data)
         self.drop_column(column_name, stream)
