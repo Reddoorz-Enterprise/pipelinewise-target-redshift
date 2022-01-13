@@ -379,7 +379,7 @@ class DbSync:
         return ','.join(
             [
                 json.dumps(flatten[name], ensure_ascii=False) if name in flatten and (
-                            flatten[name] == 0 or flatten[name]) else ''
+                        flatten[name] == 0 or flatten[name]) else ''
                 for name in self.flatten_schema
             ]
         )
@@ -637,8 +637,20 @@ class DbSync:
             "LOWER(table_schema)" if table_schema is None else "'{}'".format(table_schema.lower())
         ))
 
+    # def get_table_columns(self, table_schema=None, table_name=None, filter_schemas=None):
+    #     sql = """SELECT LOWER(c.table_schema) table_schema, LOWER(c.table_name) table_name, c.column_name, c.data_type
+    #         FROM information_schema.columns c
+    #         WHERE 1=1"""
+    #     if table_schema is not None: sql = sql + " AND LOWER(c.table_schema) = '" + table_schema.lower() + "'"
+    #     if table_name is not None: sql = sql + " AND LOWER(c.table_name) = '" + table_name.replace("\"",
+    #                                                                                                "").lower() + "'"
+    #     if filter_schemas is not None: sql = sql + " AND LOWER(c.table_schema) IN (" + ', '.join(
+    #         "'{}'".format(s).lower() for s in filter_schemas) + ")"
+    #     return self.query(sql)
+
     def get_table_columns(self, table_schema=None, table_name=None, filter_schemas=None):
-        sql = """SELECT LOWER(c.table_schema) table_schema, LOWER(c.table_name) table_name, c.column_name, c.data_type
+        sql = """SELECT LOWER(c.table_schema) table_schema, LOWER(c.table_name) table_name, c.column_name, c.data_type,
+            c.numeric_precision ,c.numeric_scale
             FROM information_schema.columns c
             WHERE 1=1"""
         if table_schema is not None: sql = sql + " AND LOWER(c.table_schema) = '" + table_schema.lower() + "'"
@@ -646,6 +658,10 @@ class DbSync:
                                                                                                    "").lower() + "'"
         if filter_schemas is not None: sql = sql + " AND LOWER(c.table_schema) IN (" + ', '.join(
             "'{}'".format(s).lower() for s in filter_schemas) + ")"
+        sql = """select table_schema ,table_name,column_name ,case when
+             lower(data_type)='numeric' then data_type ||'('||numeric_precision ||','||numeric_scale ||')'
+            else data_type end as data_type  from 
+            ({})""".format(sql)
         return self.query(sql)
 
     def handle_datatype_change(self, column_name, stream):
@@ -707,6 +723,7 @@ class DbSync:
         else:
             columns = self.get_table_columns(self.schema_name, table_name)
 
+        columns_dict = {column['column_name'].lower(): column for column in columns}
         columns_dict = {column['column_name'].lower(): column for column in columns}
 
         columns_to_add = [
