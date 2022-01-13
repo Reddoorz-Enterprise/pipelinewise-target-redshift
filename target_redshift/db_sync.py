@@ -13,7 +13,6 @@ import psycopg2.extras
 import inflection
 from singer import get_logger
 
-
 DEFAULT_VARCHAR_LENGTH = 10000
 SHORT_VARCHAR_LENGTH = 256
 LONG_VARCHAR_LENGTH = 65535
@@ -122,7 +121,7 @@ def flatten_schema(d, parent_key=[], sep='__', level=0, max_level=0):
         new_key = flatten_key(k, parent_key, sep)
         if 'type' in v.keys():
             if 'object' in v['type'] and 'properties' in v and level < max_level:
-                items.extend(flatten_schema(v, parent_key + [k], sep=sep, level=level+1, max_level=max_level).items())
+                items.extend(flatten_schema(v, parent_key + [k], sep=sep, level=level + 1, max_level=max_level).items())
             else:
                 items.append((new_key, v))
         else:
@@ -150,19 +149,21 @@ def _should_json_dump_value(key, value, flatten_schema=None):
     if isinstance(value, (dict, list)):
         return True
 
-    if flatten_schema and key in flatten_schema and 'type' in flatten_schema[key] and set(flatten_schema[key]['type']) == {'null', 'object', 'array'}:
+    if flatten_schema and key in flatten_schema and 'type' in flatten_schema[key] and set(
+            flatten_schema[key]['type']) == {'null', 'object', 'array'}:
         return True
 
     return False
 
 
-#pylint: disable-msg=too-many-arguments
+# pylint: disable-msg=too-many-arguments
 def flatten_record(d, flatten_schema=None, parent_key=[], sep='__', level=0, max_level=0):
     items = []
     for k, v in d.items():
         new_key = flatten_key(k, parent_key, sep)
         if isinstance(v, collections.MutableMapping) and level < max_level:
-            items.extend(flatten_record(v, flatten_schema, parent_key + [k], sep=sep, level=level + 1, max_level=max_level).items())
+            items.extend(flatten_record(v, flatten_schema, parent_key + [k], sep=sep, level=level + 1,
+                                        max_level=max_level).items())
         else:
             items.append((new_key, json.dumps(v) if _should_json_dump_value(k, v, flatten_schema) else v))
     return dict(items)
@@ -232,7 +233,8 @@ class DbSync:
 
         aws_profile = self.connection_config.get('aws_profile') or os.environ.get('AWS_PROFILE')
         aws_access_key_id = self.connection_config.get('aws_access_key_id') or os.environ.get('AWS_ACCESS_KEY_ID')
-        aws_secret_access_key = self.connection_config.get('aws_secret_access_key') or os.environ.get('AWS_SECRET_ACCESS_KEY')
+        aws_secret_access_key = self.connection_config.get('aws_secret_access_key') or os.environ.get(
+            'AWS_SECRET_ACCESS_KEY')
         aws_session_token = self.connection_config.get('aws_session_token') or os.environ.get('AWS_SESSION_TOKEN')
 
         # Init S3 client
@@ -289,7 +291,9 @@ class DbSync:
                 self.schema_name = config_default_target_schema
 
             if not self.schema_name:
-                raise Exception("Target schema name not defined in config. Neither 'default_target_schema' (string) nor 'schema_mapping' (object) defines target schema for {} stream.".format(stream_name))
+                raise Exception(
+                    "Target schema name not defined in config. Neither 'default_target_schema' (string) nor 'schema_mapping' (object) defines target schema for {} stream.".format(
+                        stream_name))
 
             #  Define grantees
             #  ---------------
@@ -312,10 +316,12 @@ class DbSync:
             #                                                           }
             self.grantees = self.connection_config.get('default_target_schema_select_permissions')
             if config_schema_mapping and stream_schema_name in config_schema_mapping:
-                self.grantees = config_schema_mapping[stream_schema_name].get('target_schema_select_permissions', self.grantees)
+                self.grantees = config_schema_mapping[stream_schema_name].get('target_schema_select_permissions',
+                                                                              self.grantees)
 
             self.data_flattening_max_level = self.connection_config.get('data_flattening_max_level', 0)
-            self.flatten_schema = flatten_schema(stream_schema_message['schema'], max_level=self.data_flattening_max_level)
+            self.flatten_schema = flatten_schema(stream_schema_message['schema'],
+                                                 max_level=self.data_flattening_max_level)
 
     def open_connection(self):
         conn_string = "host='{}' dbname='{}' user='{}' password='{}' port='{}'".format(
@@ -362,7 +368,9 @@ class DbSync:
         try:
             key_props = [str(flatten[p]) for p in self.stream_schema_message['key_properties']]
         except Exception as exc:
-            self.logger.info("Cannot find {} primary key(s) in record: {}".format(self.stream_schema_message['key_properties'], flatten))
+            self.logger.info(
+                "Cannot find {} primary key(s) in record: {}".format(self.stream_schema_message['key_properties'],
+                                                                     flatten))
             raise exc
         return ','.join(key_props)
 
@@ -370,12 +378,13 @@ class DbSync:
         flatten = flatten_record(record, self.flatten_schema, max_level=self.data_flattening_max_level)
         return ','.join(
             [
-                json.dumps(flatten[name], ensure_ascii=False) if name in flatten and (flatten[name] == 0 or flatten[name]) else ''
+                json.dumps(flatten[name], ensure_ascii=False) if name in flatten and (
+                            flatten[name] == 0 or flatten[name]) else ''
                 for name in self.flatten_schema
             ]
         )
 
-    def put_to_s3(self, file, stream, count, suffix = ""):
+    def put_to_s3(self, file, stream, count, suffix=""):
         self.logger.info("Uploading {} rows to S3".format(count))
 
         # Generating key in S3 bucket
@@ -426,18 +435,22 @@ class DbSync:
                 # Step 2: Generate copy credentials - prefer role if provided, otherwise use access and secret keys
                 copy_credentials = """
                     iam_role '{aws_role_arn}'
-                """.format(aws_role_arn=self.connection_config['aws_redshift_copy_role_arn']) if self.connection_config.get("aws_redshift_copy_role_arn") else """
+                """.format(
+                    aws_role_arn=self.connection_config['aws_redshift_copy_role_arn']) if self.connection_config.get(
+                    "aws_redshift_copy_role_arn") else """
                     ACCESS_KEY_ID '{aws_access_key_id}'
                     SECRET_ACCESS_KEY '{aws_secret_access_key}'
                     {aws_session_token}
                 """.format(
                     aws_access_key_id=self.connection_config['aws_access_key_id'],
                     aws_secret_access_key=self.connection_config['aws_secret_access_key'],
-                    aws_session_token="SESSION_TOKEN '{}'".format(self.connection_config['aws_session_token']) if self.connection_config.get('aws_session_token') else '',
+                    aws_session_token="SESSION_TOKEN '{}'".format(
+                        self.connection_config['aws_session_token']) if self.connection_config.get(
+                        'aws_session_token') else '',
                 )
 
                 # Step 3: Generate copy options - Override defaults from config.json if defined
-                copy_options = self.connection_config.get('copy_options',"""
+                copy_options = self.connection_config.get('copy_options', """
                     EMPTYASNULL BLANKSASNULL TRIMBLANKS TRUNCATECOLUMNS
                     TIMEFORMAT 'auto'
                     COMPUPDATE OFF STATUPDATE OFF
@@ -500,7 +513,8 @@ class DbSync:
                         stage_table,
                         target_table,
                         self.primary_key_merge_condition(),
-                        ' AND '.join(['{}.{} IS NULL'.format(target_table, c) for c in primary_column_names(stream_schema_message)])
+                        ' AND '.join(['{}.{} IS NULL'.format(target_table, c) for c in
+                                      primary_column_names(stream_schema_message)])
                     )
                     self.logger.debug("Running query: {}".format(insert_sql))
                     cur.execute(insert_sql)
@@ -565,7 +579,8 @@ class DbSync:
         self.query(query)
 
     def grant_select_on_all_tables_in_schema(self, schema_name, grantee, to_group=False):
-        query = "GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {} {}".format(schema_name, 'GROUP' if to_group else '', grantee)
+        query = "GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {} {}".format(schema_name, 'GROUP' if to_group else '',
+                                                                          grantee)
         self.logger.info(
             "Granting SELECT ON ALL TABLES privilegue on '{}' schema to '{}'... {}".format(schema_name, grantee, query))
         self.query(query)
@@ -574,7 +589,7 @@ class DbSync:
     def grant_privilege(self, schema, grantees, grant_method, to_group=False):
         if isinstance(grantees, list):
             for grantee in grantees:
-                grant_method(schema, grantee,to_group)
+                grant_method(schema, grantee, to_group)
         elif isinstance(grantees, str):
             grant_method(schema, grantees, to_group)
         elif isinstance(grantees, dict):
@@ -619,7 +634,7 @@ class DbSync:
         return self.query("""SELECT LOWER(table_schema) table_schema, LOWER(table_name) table_name
             FROM information_schema.tables
             WHERE LOWER(table_schema) = {}""".format(
-                "LOWER(table_schema)" if table_schema is None else "'{}'".format(table_schema.lower())
+            "LOWER(table_schema)" if table_schema is None else "'{}'".format(table_schema.lower())
         ))
 
     def get_table_columns(self, table_schema=None, table_name=None, filter_schemas=None):
@@ -627,33 +642,39 @@ class DbSync:
             FROM information_schema.columns c
             WHERE 1=1"""
         if table_schema is not None: sql = sql + " AND LOWER(c.table_schema) = '" + table_schema.lower() + "'"
-        if table_name is not None: sql = sql + " AND LOWER(c.table_name) = '" + table_name.replace("\"", "").lower() + "'"
-        if filter_schemas is not None: sql = sql + " AND LOWER(c.table_schema) IN (" + ', '.join("'{}'".format(s).lower() for s in filter_schemas) + ")"
+        if table_name is not None: sql = sql + " AND LOWER(c.table_name) = '" + table_name.replace("\"",
+                                                                                                   "").lower() + "'"
+        if filter_schemas is not None: sql = sql + " AND LOWER(c.table_schema) IN (" + ', '.join(
+            "'{}'".format(s).lower() for s in filter_schemas) + ")"
         return self.query(sql)
 
     def handle_datatype_change(self, column_name, stream):
         altered_col = column_name.replace("\"", "") + "_type_change"
-        columns_to_add = [
-            column_clause(
-                name,
-                properties_schema
-            )
-            for (name, properties_schema) in self.flatten_schema.items()
-            if name.lower() == column_name.lower()
-        ]
+        # columns_to_add = [
+        #     column_clause(
+        #         name,
+        #         properties_schema
+        #     )
+        #     for (name, properties_schema) in self.flatten_schema.items()
+        #     if name.lower() == column_name.lower()
+        # ]
+        columns_to_add = []
+        for name,properties_schema in self.flatten_schema.items():
+            if name.lower()==column_name.lower():
+                columns_to_add.append(column_clause(name,properties_schema))
+
         self.logger.warn(self.flatten_schema.items())
         self.logger.warn(columns_to_add)
         self.logger.warn(column_name)
-        for name, properties_schema in  self.flatten_schema.items():
+        for name, properties_schema in self.flatten_schema.items():
             self.logger.info(f"{name}  --> {properties_schema}")
-            self.logger.info(f"{column_clause(name,properties_schema)}")
+            self.logger.info(f"{column_clause(name, properties_schema)}")
 
         # column_type(properties_schema, with_length=False).lower()
 
         self.logger.info("ADDing COlumns")
         for column in columns_to_add:
-
-            self.add_column(column , stream)
+            self.add_column(column, stream)
         # version_column = "ALTER TABLE {} RENAME COLUMN {} TO {}".format(self.table_name(stream, is_stage=False),
         #                                                                 column_name,
         #                                                                 altered_col)
@@ -672,8 +693,6 @@ class DbSync:
         self.drop_column(column_name, stream)
         self.logger.info("Renaming versioned_col to original col :{}".format(rename_altered_to_original_col))
         self.query(rename_altered_to_original_col)
-
-
 
     def update_columns(self):
         stream_schema_message = self.stream_schema_message
@@ -708,7 +727,8 @@ class DbSync:
             ))
             for (name, properties_schema) in self.flatten_schema.items()
             if name.lower() in columns_dict and
-               columns_dict[name.lower()]['data_type'].lower() != column_type(properties_schema, with_length=False).lower() and
+               columns_dict[name.lower()]['data_type'].lower() != column_type(properties_schema,
+                                                                              with_length=False).lower() and
 
                # Don't alter table if 'timestamp without time zone' detected as the new required column type
                #
@@ -727,7 +747,7 @@ class DbSync:
         for (column_name, column) in columns_to_replace:
             # self.version_column(column_name, stream)
             # self.add_column(column, stream)
-            self.handle_datatype_change(column_name,stream)
+            self.handle_datatype_change(column_name, stream)
 
         # Refresh table cache if required
         if self.table_cache and (len(columns_to_add) > 0 or len(columns_to_replace)):
