@@ -659,8 +659,9 @@ class DbSync:
         #     if name.lower() == column_name.lower()
         # ]
         columns_to_add = []
-        for name,properties_schema in self.flatten_schema.items():
+        for name, properties_schema in self.flatten_schema.items():
             if name.lower() == column_name.lower():
+                print(f"Matches :{name}:{column_name}")
                 columns_to_add.append(column_clause(name, properties_schema))
 
         self.logger.warn(self.flatten_schema.items())
