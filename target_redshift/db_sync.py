@@ -672,9 +672,6 @@ class DbSync:
                 self.logger.info(f"Matches :{name}:{column_name}")
                 columns_to_add.append(f"{safe_column_name(altered_col)} {column_type(properties_schema)} ")
 
-        self.logger.warn(self.flatten_schema.items())
-        self.logger.warn(columns_to_add)
-        self.logger.warn(column_name)
         for column in columns_to_add:
             self.add_column(column, stream)
         update_altered_col_with_prev_data = "UPDATE  {} SET  {}={}".format(self.table_name(stream, is_stage=False),
@@ -703,7 +700,6 @@ class DbSync:
         else:
             columns = self.get_table_columns(self.schema_name, table_name)
 
-        columns_dict = {column['column_name'].lower(): column for column in columns}
         columns_dict = {column['column_name'].lower(): column for column in columns}
 
         columns_to_add = [
@@ -741,7 +737,6 @@ class DbSync:
                # (Check the column_type function for further details)
                column_type(properties_schema).lower() != 'timestamp without time zone'
         ]
-        self.logger.info(f"COLUMN_DICT :{columns_dict}")
         for (column_name, column) in columns_to_replace:
             self.handle_datatype_change(column_name.strip('"'), stream)
 
