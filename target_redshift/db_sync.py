@@ -748,7 +748,7 @@ class DbSync:
         for (column_name, column) in columns_to_replace:
             # self.version_column(column_name, stream)
             # self.add_column(column, stream)
-            self.handle_datatype_change(column_name, stream)
+            self.handle_datatype_change(column_name.strip('"'), stream)
 
         # Refresh table cache if required
         if self.table_cache and (len(columns_to_add) > 0 or len(columns_to_replace)):
