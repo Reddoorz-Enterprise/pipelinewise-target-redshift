@@ -667,9 +667,9 @@ class DbSync:
         self.logger.warn(self.flatten_schema.items())
         self.logger.warn(columns_to_add)
         self.logger.warn(column_name)
-        for name, properties_schema in self.flatten_schema.items():
-            self.logger.info(f"{name}  --> {properties_schema}")
-            self.logger.info(f"{column_clause(name, properties_schema)}")
+        # for name, properties_schema in self.flatten_schema.items():
+        #     self.logger.info(f"{name}  --> {properties_schema}")
+        #     self.logger.info(f"{column_clause(name, properties_schema)}")
 
         # column_type(properties_schema, with_length=False).lower()
 
@@ -744,7 +744,7 @@ class DbSync:
                # (Check the column_type function for further details)
                column_type(properties_schema).lower() != 'timestamp without time zone'
         ]
-
+        self.logger.info(f"COLUMN_DICT :{columns_dict}")
         for (column_name, column) in columns_to_replace:
             # self.version_column(column_name, stream)
             # self.add_column(column, stream)
