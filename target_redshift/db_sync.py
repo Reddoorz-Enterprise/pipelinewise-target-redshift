@@ -639,10 +639,14 @@ class DbSync:
                 properties_schema
             )
             for (name, properties_schema) in self.flatten_schema.items()
-            if name.lower() ==column_name.lower()
+            if name.lower() == column_name.lower()
         ]
         self.logger.warn(self.flatten_schema.items())
         self.logger.warn(columns_to_add)
+        self.logger.warn(column_name)
+        for name, properties_schema in  self.flatten_schema.items():
+            self.logger.info(f"{name}  --> {properties_schema}")
+            self.logger.info(f"{column_clause(name,properties_schema)}")
 
         # column_type(properties_schema, with_length=False).lower()
 
