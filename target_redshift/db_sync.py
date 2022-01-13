@@ -637,16 +637,7 @@ class DbSync:
             "LOWER(table_schema)" if table_schema is None else "'{}'".format(table_schema.lower())
         ))
 
-    # def get_table_columns(self, table_schema=None, table_name=None, filter_schemas=None):
-    #     sql = """SELECT LOWER(c.table_schema) table_schema, LOWER(c.table_name) table_name, c.column_name, c.data_type
-    #         FROM information_schema.columns c
-    #         WHERE 1=1"""
-    #     if table_schema is not None: sql = sql + " AND LOWER(c.table_schema) = '" + table_schema.lower() + "'"
-    #     if table_name is not None: sql = sql + " AND LOWER(c.table_name) = '" + table_name.replace("\"",
-    #                                                                                                "").lower() + "'"
-    #     if filter_schemas is not None: sql = sql + " AND LOWER(c.table_schema) IN (" + ', '.join(
-    #         "'{}'".format(s).lower() for s in filter_schemas) + ")"
-    #     return self.query(sql)
+
 
     def get_table_columns(self, table_schema=None, table_name=None, filter_schemas=None):
         sql = """SELECT LOWER(c.table_schema) table_schema, LOWER(c.table_name) table_name, c.column_name, c.data_type,
