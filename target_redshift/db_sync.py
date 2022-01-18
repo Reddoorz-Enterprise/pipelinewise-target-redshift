@@ -653,6 +653,7 @@ class DbSync:
              lower(data_type)='numeric' then data_type ||'('||numeric_precision ||','||numeric_scale ||')'
             else data_type end as data_type  from 
             ({})""".format(sql)
+        self.logger.info(sql)
         return self.query(sql)
 
     def handle_datatype_change(self, column_name, stream):
