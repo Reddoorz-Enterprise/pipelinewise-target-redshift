@@ -879,10 +879,8 @@ class DbSync:
             # TODO: Support both timestamp with/without time zone in target-redshift
             # when extracting data-time values from JSON
             # (Check the column_type function for further details)
-               (
-                       column_type(properties_schema).lower() != "timestamp without time zone"
-                       or column_type(properties_schema).lower() != 'character varying'
-                )
+
+           column_type(properties_schema).lower() != "timestamp without time zone"
         ]
         for (column_name, column) in columns_to_replace:
             self.handle_datatype_change(column_name.strip('"'), stream)
