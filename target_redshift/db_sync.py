@@ -664,7 +664,7 @@ class DbSync:
 
             if name.lower() == column_name.lower():
                 self.logger.info(f"Matches :{name}:{column_name}")
-                self.logger(f"{safe_column_name(altered_col)} {column_type(properties_schema)} ")
+                self.logger.info(f"{safe_column_name(altered_col)} {column_type(properties_schema)} ")
                 columns_to_add.append(f"{safe_column_name(altered_col)} {column_type(properties_schema)} ")
 
         self.logger.info("columns to add :",columns_to_add)
