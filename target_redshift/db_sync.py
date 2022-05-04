@@ -864,7 +864,7 @@ class DbSync:
         for col in columns_dict:
             col_val = columns_dict[col]
             self.logger.info("col_value %s", col_val)
-            if 'character varying' not in col_val:
+            if 'character varying' not in list(col_val):
                 self.logger.info("inside filter")
                 filtered_column_dict[col] = col_val
         # filtered_column_dict = {column_info:columns_dict[column_info] for column_info in columns_dict if 'character varying' not in
