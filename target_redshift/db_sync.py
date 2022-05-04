@@ -803,7 +803,7 @@ class DbSync:
     def handle_datatype_change(self, column_name, stream):
         altered_col = column_name.replace('"', "") + "_type_change"
         columns_to_add = []
-        self.logger.info(self.flatten_schema.items())
+        self.logger.info("flatten schema %s", self.flatten_schema.items())
         for name, properties_schema in self.flatten_schema.items():
 
             if name.lower() == column_name.lower():
@@ -864,8 +864,8 @@ class DbSync:
         columns_to_replace = [
             (safe_column_name(name), column_clause(name, properties_schema))
             for (name, properties_schema) in self.flatten_schema.items()
-            if name.lower() in columns_dict
-            and columns_dict[name.lower()]["data_type"].lower()
+            if name.lower() in filtered_column_list
+            and filtered_column_list[name.lower()]["data_type"].lower()
             != column_type(properties_schema, with_length=False).lower()
             and
             # Don't alter table if 'timestamp without time zone' detected as the new required column type
