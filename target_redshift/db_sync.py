@@ -860,7 +860,7 @@ class DbSync:
 
         for column in columns_to_add:
             self.add_column(column, stream)
-        filtered_column_list = [columns_dict[column_info] for column_info in columns_dict if 'character varying' in
+        filtered_column_list = [columns_dict[column_info] for column_info in columns_dict if 'character varying' not in
                                 columns_dict[column_info]]
         self.logger.info("Filtered dict %s",filtered_column_list)
         columns_to_replace = [
