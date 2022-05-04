@@ -860,7 +860,8 @@ class DbSync:
 
         for column in columns_to_add:
             self.add_column(column, stream)
-        filtered_column_list = [column_info for column_info in columns_dict if 'character varying' in list(column_info.values())]
+        filtered_column_list = [columns_dict[column_info] for column_info in columns_dict if 'character varying' in
+                                columns_dict[column_info]]
         columns_to_replace = [
             (safe_column_name(name), column_clause(name, properties_schema))
             for (name, properties_schema) in self.flatten_schema.items()
