@@ -860,8 +860,15 @@ class DbSync:
 
         for column in columns_to_add:
             self.add_column(column, stream)
-        filtered_column_dict = {column_info:columns_dict[column_info] for column_info in columns_dict if 'character varying' not in
-                                columns_dict[column_info]}
+        filtered_column_dict = {}
+        for col in columns_dict:
+            col_val = columns_dict[col]
+            self.logger.info("col_value %s", col_val)
+            if 'character varying' not in col_val:
+                self.logger.info("inside filter")
+                filtered_column_dict[col] = col_val
+        # filtered_column_dict = {column_info:columns_dict[column_info] for column_info in columns_dict if 'character varying' not in
+        #                         columns_dict[column_info]}
         self.logger.info("Filtered dict -----######## %s", filtered_column_dict)
         columns_to_replace = [
             (safe_column_name(name), column_clause(name, properties_schema))
