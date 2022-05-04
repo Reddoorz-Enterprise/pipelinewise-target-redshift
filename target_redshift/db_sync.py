@@ -869,7 +869,7 @@ class DbSync:
                 filtered_column_dict[col] = col_val
         # filtered_column_dict = {column_info:columns_dict[column_info] for column_info in columns_dict if 'character varying' not in
         #                         columns_dict[column_info]}
-        self.logger.info("Filtered dict -----######## %s", filtered_column_dict)
+        self.logger.info("Filtered dict -----########111 %s", filtered_column_dict)
         columns_to_replace = [
             (safe_column_name(name), column_clause(name, properties_schema))
             for (name, properties_schema) in self.flatten_schema.items()
